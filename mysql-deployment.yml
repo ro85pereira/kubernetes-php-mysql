@@ -26,39 +26,39 @@ spec:
         app: mysql
     spec:
       containers:
-      - imagem: ro85pereira/projeto-database:1.0
+      - imagem: mysql:latest
         args:
         - "- -ignore-db-dir=lost+found"
         imagePullPolicy: Always
         name: mysql
         ports:
         - containerPort: 3306
-          name:mysql
-
-        volumes:
+        env:
+          - name: MYSQL_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+              name: my-secret
+              key: ROOT_PASSWORD
+          - name: MYSQL_DATABASE
+            valueFrom:
+              secretKeyRef:
+              name: my-secret
+              key: MYSQL_DATABASE  
+         volumes:
         - name: mysql-dados
           persistentVolumeClaim:
             claimName: mysql-dados
+
 ---
 
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: v1
+kind: Service
 metadata:
-  name: php
-  labels:
-    app: php
-spec: 
-  replicas: 6
+  name: mysql-connection
+spec:
+  ports:
+  - port: 3306
   selector:
-    matchLabels:
-      app: php
-  template:
-    metadata:
-      labels:
-        app: php
-    spec:
-      containers:
-      - name: php
-      image: ro85pereira/projeto-backend:1.0
-      ports:
-      - containerPort :80
+    app: mysql
+  clusterIP: None
+
